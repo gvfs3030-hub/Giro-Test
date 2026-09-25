@@ -34,7 +34,7 @@ export default function PaymentStep() {
       method === 'prazo' ? today : null,
       rate
     );
-    router.push('/new-sale/signature');
+    router.push('/new-sale/confirmation');
   };
 
   return (
@@ -42,7 +42,7 @@ export default function PaymentStep() {
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <Pressable onPress={() => router.back()} hitSlop={12}><Ionicons name="arrow-back" size={24} color={colors.text} /></Pressable>
         <Text style={[styles.title, { color: colors.text }]}>Pagamento</Text>
-        <Text style={[styles.step, { color: colors.textCaption }]}>4/6</Text>
+        <Text style={[styles.step, { color: colors.textCaption }]}>4/5</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>

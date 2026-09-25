@@ -11,8 +11,6 @@ const initialState: SaleWizardState = {
   interestRate: 0,
   firstDueDate: null,
   observations: '',
-  signatureUri: null,
-  signatureData: null,
 };
 
 interface SaleWizardContextType {
@@ -23,7 +21,6 @@ interface SaleWizardContextType {
   removeItem: (productId: string) => void;
   setPayment: (method: string, count: number, firstDate: string | null, interestRate?: number) => void;
   setObservations: (obs: string) => void;
-  setSignature: (uri: string | null, data?: string | null) => void;
   getSubtotal: () => number;
   getTotalDiscount: () => number;
   getTotal: () => number;
@@ -84,10 +81,6 @@ export function SaleWizardProvider({ children }: { children: React.ReactNode }) 
     setState((s) => ({ ...s, observations: obs }));
   }, []);
 
-  const setSignature = useCallback((uri: string | null, data?: string | null) => {
-    setState((s) => ({ ...s, signatureUri: uri, signatureData: data ?? null }));
-  }, []);
-
   const getSubtotal = useCallback(() => {
     return (state.items ?? []).reduce((sum, i) => sum + (i?.subtotal ?? 0), 0);
   }, [state.items]);
@@ -117,7 +110,6 @@ export function SaleWizardProvider({ children }: { children: React.ReactNode }) 
         removeItem,
         setPayment,
         setObservations,
-        setSignature,
         getSubtotal,
         getTotalDiscount,
         getTotal,

@@ -182,7 +182,7 @@ export default function VisitPlanScreen() {
         }
       />
 
-      <Pressable style={[styles.fab, { backgroundColor: colors.primary }]} onPress={() => setShowAdd(true)}>
+      <Pressable style={[styles.fab, { backgroundColor: colors.primary, bottom: 16 + insets.bottom }]} onPress={() => setShowAdd(true)}>
         <Ionicons name="add" size={24} color="#fff" />
       </Pressable>
 

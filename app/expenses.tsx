@@ -76,7 +76,7 @@ export default function ExpensesScreen() {
         ListEmptyComponent={<EmptyState icon="receipt-outline" title="Nenhuma despesa" actionLabel="Adicionar Despesa" onAction={() => router.push('/expense-add')} />}
       />
 
-      <Pressable style={[styles.fab, { backgroundColor: colors.primary }]} onPress={() => router.push('/expense-add')}>
+      <Pressable style={[styles.fab, { backgroundColor: colors.primary, bottom: 16 + insets.bottom }]} onPress={() => router.push('/expense-add')}>
         <Ionicons name="add" size={28} color="#fff" />
       </Pressable>
     </View>

@@ -160,7 +160,7 @@ export default function RoutesScreen() {
         </Pressable>
       </Modal>
 
-      <Pressable style={[styles.fab, { backgroundColor: colors.primary }]} onPress={() => setShowCheckIn(true)}>
+      <Pressable style={[styles.fab, { backgroundColor: colors.primary, bottom: 16 + insets.bottom }]} onPress={() => setShowCheckIn(true)}>
         <Ionicons name="location" size={24} color="#fff" />
       </Pressable>
     </View>

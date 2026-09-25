@@ -1,4 +1,4 @@
-// [LOCAL] — Step 6: confirmação + geração de PDF
+// [LOCAL] — Step 5: confirmação + geração de PDF
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView, Platform } from 'react-native';
 import { router } from 'expo-router';
@@ -42,13 +42,13 @@ export default function ConfirmationStep() {
       const total = wizard.getTotal();
 
       await db.runAsync(
-        `INSERT INTO sales (id, orderNumber, clientId, subtotal, totalDiscount, total, paymentMethod, installmentCount, interestRate, cardInstallments, observations, signatureUri, signatureData, status, createdAt, updatedAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendente', ?, ?)`,
+        `INSERT INTO sales (id, orderNumber, clientId, subtotal, totalDiscount, total, paymentMethod, installmentCount, interestRate, cardInstallments, observations, status, createdAt, updatedAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendente', ?, ?)`,
         [id, newOrderNum, wizard.state.clientId ?? 'avulso', subtotal, totalDiscount, total,
          wizard.state.paymentMethod, wizard.state.installmentCount, wizard.state.interestRate || 0,
          wizard.state.paymentMethod === 'cartao' ? wizard.state.installmentCount : 1,
          wizard.state.observations || null,
-         wizard.state.signatureUri, wizard.state.signatureData, now, now]
+         now, now]
       );
 
       // Insert items + decrement stock
@@ -93,20 +93,6 @@ export default function ConfirmationStep() {
     setSaving(false);
   };
 
-  const signatureHtml = () => {
-    if (!wizard.state.signatureData) return '';
-    try {
-      const sig = JSON.parse(wizard.state.signatureData) as { paths: string[]; width: number; height: number };
-      const pathsSvg = (sig.paths ?? []).map((d) => `<path d="${d}" stroke="#1A1A1A" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`).join('');
-      return `<div class="sig-box">
-        <label>Assinatura do cliente</label>
-        <svg viewBox="0 0 ${sig.width} ${sig.height}" style="width:220px;height:110px;border:1px solid #eee;border-radius:8px;background:#fff">${pathsSvg}</svg>
-      </div>`;
-    } catch {
-      return '';
-    }
-  };
-
   const generatePDF = async () => {
     try {
       const db = await getDatabase();
@@ -129,8 +115,6 @@ export default function ConfirmationStep() {
         td { padding: 10px 8px; border-bottom: 1px solid #eee; font-size: 14px; }
         .totals { text-align: right; margin-top: 16px; }
         .totals .total { font-size: 20px; color: #00C853; font-weight: bold; }
-        .sig-box { margin-top: 24px; }
-        .sig-box label { font-size: 12px; color: #666; display: block; margin-bottom: 6px; }
         .footer { margin-top: 32px; text-align: center; color: #999; font-size: 12px; }
         .footer .thanks { color: #00C853; font-weight: bold; font-size: 15px; margin-bottom: 4px; }
       </style></head><body>
@@ -150,7 +134,6 @@ export default function ConfirmationStep() {
           <p class="total">Total: ${formatCurrency(wizard.getTotal())}</p>
           <p>Pagamento: ${paymentDetailLine(wizard.state.paymentMethod, wizard.state.installmentCount, wizard.state.interestRate)}</p>
         </div>
-        ${signatureHtml()}
         <div class="footer">
           <p class="thanks">Agradecemos a Preferência!</p>
           <p>Documento gerado pelo Giro Vendas</p>

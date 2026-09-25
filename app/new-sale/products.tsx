@@ -1,6 +1,6 @@
 // [LOCAL] — Step 2: selecionar produtos
 import React, { useCallback, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, Pressable, TextInput, Modal } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Pressable, TextInput, Modal, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -79,7 +79,7 @@ export default function SelectProductsStep() {
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <Pressable onPress={() => router.back()} hitSlop={12}><Ionicons name="arrow-back" size={24} color={colors.text} /></Pressable>
         <Text style={[styles.title, { color: colors.text }]}>Adicionar Produtos</Text>
-        <Text style={[styles.step, { color: colors.textCaption }]}>2/6</Text>
+        <Text style={[styles.step, { color: colors.textCaption }]}>2/5</Text>
       </View>
 
       <View style={{ paddingHorizontal: 16, marginBottom: 8 }}>
@@ -116,41 +116,48 @@ export default function SelectProductsStep() {
       />
 
       {/* Add product modal */}
-      <Modal visible={!!modalProduct} transparent animationType="slide">
-        <Pressable style={styles.modalOverlay} onPress={() => setModalProduct(null)}>
-          <Pressable style={[styles.modalContent, { backgroundColor: colors.surface }]} onPress={() => {}}>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>{modalProduct?.name}</Text>
-            <Text style={{ color: colors.textSecondary, marginBottom: 16 }}>
-              Disponível: {modalProduct?.stockCurrent ?? 0} {modalProduct?.unit} | {formatCurrency(modalProduct?.price1)}
-            </Text>
-            <Text style={[styles.label, { color: colors.text }]}>Quantidade</Text>
-            <TextInput
-              style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
-              value={qty}
-              onChangeText={setQty}
-              keyboardType="decimal-pad"
-            />
-            {parseFloat(qty) > (modalProduct?.stockCurrent ?? 0) && (modalProduct?.stockCurrent ?? 0) > 0 && (
-              <Text style={[styles.stockWarn, { color: colors.danger }]}>Apenas {modalProduct?.stockCurrent} unidades em estoque</Text>
-            )}
-            <Text style={[styles.label, { color: colors.text }]}>Desconto (%)</Text>
-            <TextInput
-              style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
-              value={discount}
-              onChangeText={setDiscount}
-              keyboardType="decimal-pad"
-            />
-            <View style={styles.modalTotal}>
-              <Text style={[styles.totalLabel, { color: colors.textSecondary }]}>Subtotal:</Text>
-              <Text style={[styles.totalValue, { color: colors.text }]}>
-                {formatCurrency((parseFloat(qty) || 0) * (modalProduct?.price1 ?? 0) * (1 - (parseFloat(discount) || 0) / 100))}
-              </Text>
-            </View>
-            <Pressable style={[styles.addBtn, { backgroundColor: colors.primary }]} onPress={handleAddProduct}>
-              <Text style={styles.addBtnText}>Adicionar</Text>
+      <Modal visible={!!modalProduct} transparent animationType="slide" onRequestClose={() => setModalProduct(null)}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <Pressable style={styles.modalOverlay} onPress={() => setModalProduct(null)}>
+            <Pressable style={[styles.modalContent, { backgroundColor: colors.surface, paddingBottom: Math.max(insets.bottom, 24) }]} onPress={() => {}}>
+              <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+                <Text style={[styles.modalTitle, { color: colors.text }]}>{modalProduct?.name}</Text>
+                <Text style={{ color: colors.textSecondary, marginBottom: 16 }}>
+                  Disponível: {modalProduct?.stockCurrent ?? 0} {modalProduct?.unit} | {formatCurrency(modalProduct?.price1)}
+                </Text>
+                <Text style={[styles.label, { color: colors.text }]}>Quantidade</Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
+                  value={qty}
+                  onChangeText={setQty}
+                  keyboardType="decimal-pad"
+                />
+                {parseFloat(qty) > (modalProduct?.stockCurrent ?? 0) && (modalProduct?.stockCurrent ?? 0) > 0 && (
+                  <Text style={[styles.stockWarn, { color: colors.danger }]}>Apenas {modalProduct?.stockCurrent} unidades em estoque</Text>
+                )}
+                <Text style={[styles.label, { color: colors.text }]}>Desconto (%)</Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
+                  value={discount}
+                  onChangeText={setDiscount}
+                  keyboardType="decimal-pad"
+                />
+                <View style={styles.modalTotal}>
+                  <Text style={[styles.totalLabel, { color: colors.textSecondary }]}>Subtotal:</Text>
+                  <Text style={[styles.totalValue, { color: colors.text }]}>
+                    {formatCurrency((parseFloat(qty) || 0) * (modalProduct?.price1 ?? 0) * (1 - (parseFloat(discount) || 0) / 100))}
+                  </Text>
+                </View>
+                <Pressable style={[styles.addBtn, { backgroundColor: colors.primary }]} onPress={handleAddProduct}>
+                  <Text style={styles.addBtnText}>Adicionar</Text>
+                </Pressable>
+              </ScrollView>
             </Pressable>
           </Pressable>
-        </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Bottom bar */}
@@ -184,7 +191,7 @@ const styles = StyleSheet.create({
   qtyBadge: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   qtyBadgeText: { color: '#fff', fontSize: 14, fontWeight: '700' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modalContent: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24 },
+  modalContent: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: '85%' },
   modalTitle: { fontSize: 20, fontWeight: '700', marginBottom: 4 },
   label: { fontSize: 14, fontWeight: '600', marginBottom: 4, marginTop: 8 },
   input: { height: 48, borderRadius: 12, borderWidth: 1, paddingHorizontal: 16, fontSize: 16 },

@@ -83,7 +83,7 @@ export default function ProductsScreen() {
         }
       />
 
-      <Pressable style={[styles.fab, { backgroundColor: colors.primary }]} onPress={() => router.push('/product-add')}>
+      <Pressable style={[styles.fab, { backgroundColor: colors.primary, bottom: 16 + insets.bottom }]} onPress={() => router.push('/product-add')}>
         <Ionicons name="add" size={28} color="#fff" />
       </Pressable>
     </View>

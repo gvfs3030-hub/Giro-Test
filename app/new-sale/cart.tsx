@@ -1,6 +1,6 @@
 // [LOCAL] — Step 3: carrinho
 import React from 'react';
-import { View, Text, FlatList, StyleSheet, Pressable, TextInput } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Pressable, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,14 +15,18 @@ export default function CartStep() {
   const wizard = useSaleWizard();
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <KeyboardAvoidingView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <Pressable onPress={() => router.back()} hitSlop={12}><Ionicons name="arrow-back" size={24} color={colors.text} /></Pressable>
         <Text style={[styles.title, { color: colors.text }]}>Carrinho</Text>
-        <Text style={[styles.step, { color: colors.textCaption }]}>3/6</Text>
+        <Text style={[styles.step, { color: colors.textCaption }]}>3/5</Text>
       </View>
 
       <FlatList
+        style={{ flex: 1 }}
         data={wizard.state.items ?? []}
         keyExtractor={(item) => item?.productId ?? ''}
         contentContainerStyle={{ paddingBottom: 200 }}
@@ -79,7 +83,7 @@ export default function CartStep() {
           <Ionicons name="arrow-forward" size={20} color="#fff" />
         </Pressable>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

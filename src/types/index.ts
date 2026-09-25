@@ -170,8 +170,6 @@ export interface SaleWizardState {
   interestRate: number;
   firstDueDate: string | null;
   observations: string;
-  signatureUri: string | null;
-  signatureData: string | null;
 }
 
 export type ThemeMode = 'light' | 'dark' | 'system';
