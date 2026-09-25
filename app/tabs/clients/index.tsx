@@ -99,7 +99,7 @@ export default function ClientsListScreen() {
           <EmptyState
             icon="people-outline"
             title="Nenhum cliente cadastrado"
-            message="Cadastre seu primeiro cliente para come\u00e7ar a vender"
+            message="Cadastre seu primeiro cliente para começar a vender"
             actionLabel="Cadastrar Cliente"
             onAction={() => router.push('/client-add')}
           />

@@ -83,8 +83,16 @@ export default function RoutesScreen() {
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <Pressable onPress={() => router.back()} hitSlop={12}><Ionicons name="arrow-back" size={24} color={colors.text} /></Pressable>
         <Text style={[styles.title, { color: colors.text }]}>Rotas e Visitas</Text>
-        <View style={{ width: 24 }} />
+        <Pressable onPress={() => router.push('/visit-plan')} hitSlop={12}>
+          <Ionicons name="calendar-outline" size={24} color={colors.text} />
+        </Pressable>
       </View>
+
+      <Pressable style={[styles.planBanner, { backgroundColor: colors.primaryLight }]} onPress={() => router.push('/visit-plan')}>
+        <Ionicons name="calendar" size={18} color={colors.primary} />
+        <Text style={{ color: colors.primary, fontWeight: '600', fontSize: 14, flex: 1 }}>Diário de Visitas — planeje os próximos dias</Text>
+        <Ionicons name="chevron-forward" size={18} color={colors.primary} />
+      </Pressable>
 
       <Text style={[styles.dateLabel, { color: colors.textSecondary }]}>{formatDate(todayISO())} — Hoje</Text>
 
@@ -163,6 +171,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 12 },
   title: { fontSize: 20, fontWeight: '700' },
+  planBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginBottom: 8, padding: 12, borderRadius: 12 },
   dateLabel: { paddingHorizontal: 16, fontSize: 16, marginBottom: 12 },
   visitCard: { marginHorizontal: 16 },
   visitRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },

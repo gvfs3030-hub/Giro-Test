@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../../src/contexts/ThemeContext';
 import { getDatabase } from '../../../src/database/database';
 import type { Product } from '../../../src/types';
-import { todayISO, parseCurrencyInput } from '../../../src/utils/format';
+import { todayISO, parseCurrencyInput, formatCurrency } from '../../../src/utils/format';
 import { UNITS, CATEGORIES } from '../../../src/constants/theme';
 import Toast from 'react-native-toast-message';
 
@@ -31,9 +31,9 @@ export default function ProductEditScreen() {
       if (p) {
         setForm({
           name: p.name ?? '', barcode: p.barcode ?? '', category: p.category ?? 'Alimentos',
-          unit: p.unit ?? 'UN', price1: String(p.price1 ?? 0), price2: String(p.price2 ?? ''),
-          price3: String(p.price3 ?? ''), stockCurrent: String(p.stockCurrent ?? 0),
-          stockMinimum: String(p.stockMinimum ?? 0), description: p.description ?? '',
+          unit: p.unit ?? 'UN', price1: String(p.price1 ?? 0), price2: p.price2 ? String(p.price2) : '',
+          stockCurrent: p.stockCurrent ? String(p.stockCurrent) : '',
+          stockMinimum: p.stockMinimum ? String(p.stockMinimum) : '', description: p.description ?? '',
         });
       }
     } catch (e) { console.error(e); }
@@ -47,9 +47,9 @@ export default function ProductEditScreen() {
     try {
       const db = await getDatabase();
       await db.runAsync(
-        `UPDATE products SET name=?, barcode=?, category=?, unit=?, price1=?, price2=?, price3=?, stockCurrent=?, stockMinimum=?, description=?, updatedAt=? WHERE id=?`,
+        `UPDATE products SET name=?, barcode=?, category=?, unit=?, price1=?, price2=?, stockCurrent=?, stockMinimum=?, description=?, updatedAt=? WHERE id=?`,
         [form.name, form.barcode || null, form.category, form.unit, parseCurrencyInput(form.price1 ?? '0'),
-         form.price2 ? parseCurrencyInput(form.price2) : null, form.price3 ? parseCurrencyInput(form.price3) : null,
+         form.price2 ? parseCurrencyInput(form.price2) : null,
          parseInt(form.stockCurrent ?? '0') || 0, parseInt(form.stockMinimum ?? '0') || 0, form.description || null, todayISO(), id]
       );
       Toast.show({ type: 'success', text1: 'Produto atualizado!', position: 'bottom' });
@@ -73,20 +73,28 @@ export default function ProductEditScreen() {
         <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]} value={form.name ?? ''} onChangeText={(v) => update('name', v)} />
         <Text style={[styles.label, { color: colors.text }]}>Código de Barras</Text>
         <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]} value={form.barcode ?? ''} onChangeText={(v) => update('barcode', v)} />
-        <Text style={[styles.label, { color: colors.text }]}>Preço Tabela 1</Text>
-        <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]} value={form.price1 ?? ''} onChangeText={(v) => update('price1', v)} keyboardType="decimal-pad" />
-        <Text style={[styles.label, { color: colors.text }]}>Preço Tabela 2</Text>
-        <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]} value={form.price2 ?? ''} onChangeText={(v) => update('price2', v)} keyboardType="decimal-pad" />
-        <Text style={[styles.label, { color: colors.text }]}>Preço Tabela 3</Text>
-        <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]} value={form.price3 ?? ''} onChangeText={(v) => update('price3', v)} keyboardType="decimal-pad" />
+        <Text style={[styles.label, { color: colors.text }]}>Preço de Venda</Text>
+        <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]} value={form.price1 ?? ''} onChangeText={(v) => update('price1', v)} placeholder="0,00" placeholderTextColor={colors.textCaption} keyboardType="decimal-pad" />
+        <Text style={[styles.label, { color: colors.text }]}>Preço de Custo</Text>
+        <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]} value={form.price2 ?? ''} onChangeText={(v) => update('price2', v)} placeholder="0,00" placeholderTextColor={colors.textCaption} keyboardType="decimal-pad" />
+        {parseCurrencyInput(form.price1 ?? '') > 0 && parseCurrencyInput(form.price2 ?? '') > 0 && (
+          <View style={[styles.marginBox, { backgroundColor: colors.primaryLight }]}>
+            <Text style={{ color: colors.primary, fontWeight: '600', fontSize: 13 }}>Lucro estimado por unidade</Text>
+            <Text style={{ color: colors.primary, fontWeight: '700', fontSize: 20, marginTop: 2 }}>
+              {formatCurrency(parseCurrencyInput(form.price1 ?? '') - parseCurrencyInput(form.price2 ?? ''))}
+              {'  '}
+              ({(((parseCurrencyInput(form.price1 ?? '') - parseCurrencyInput(form.price2 ?? '')) / parseCurrencyInput(form.price1 ?? '')) * 100).toFixed(1)}%)
+            </Text>
+          </View>
+        )}
         <View style={styles.row}>
           <View style={{ flex: 1 }}>
             <Text style={[styles.label, { color: colors.text }]}>Estoque Atual</Text>
-            <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]} value={form.stockCurrent ?? ''} onChangeText={(v) => update('stockCurrent', v)} keyboardType="numeric" />
+            <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]} value={form.stockCurrent ?? ''} onChangeText={(v) => update('stockCurrent', v)} placeholder="0" placeholderTextColor={colors.textCaption} keyboardType="numeric" />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={[styles.label, { color: colors.text }]}>Estoque Mínimo</Text>
-            <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]} value={form.stockMinimum ?? ''} onChangeText={(v) => update('stockMinimum', v)} keyboardType="numeric" />
+            <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]} value={form.stockMinimum ?? ''} onChangeText={(v) => update('stockMinimum', v)} placeholder="0" placeholderTextColor={colors.textCaption} keyboardType="numeric" />
           </View>
         </View>
         <Pressable style={[styles.saveBtn, { backgroundColor: colors.primary }]} onPress={handleSave} disabled={saving}>
@@ -105,6 +113,7 @@ const styles = StyleSheet.create({
   label: { fontSize: 14, fontWeight: '600', marginBottom: 4, marginTop: 12 },
   input: { height: 48, borderRadius: 12, borderWidth: 1, paddingHorizontal: 16, fontSize: 16 },
   row: { flexDirection: 'row', gap: 12 },
+  marginBox: { borderRadius: 12, padding: 12, marginTop: 12 },
   saveBtn: { height: 56, borderRadius: 24, alignItems: 'center', justifyContent: 'center', marginTop: 24 },
   saveBtnText: { color: '#fff', fontSize: 18, fontWeight: '700' },
 });

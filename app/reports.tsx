@@ -119,6 +119,16 @@ export default function ReportsScreen() {
           </Card>
         </View>
 
+        <Card style={[styles.chartCard, { backgroundColor: colors.primaryLight, borderWidth: 0 }]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View>
+              <Text style={{ color: colors.primary, fontSize: 13, fontWeight: '600' }}>Lucro do mês</Text>
+              <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>Vendas − Despesas</Text>
+            </View>
+            <Text style={{ color: colors.primary, fontWeight: '700', fontSize: 26 }}>{formatCurrency(monthSales - monthExpenses)}</Text>
+          </View>
+        </Card>
+
         {/* Goal Progress */}
         {monthGoal > 0 && (
           <Card style={styles.chartCard}>

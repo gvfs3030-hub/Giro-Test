@@ -8,9 +8,11 @@ const initialState: SaleWizardState = {
   items: [],
   paymentMethod: 'dinheiro',
   installmentCount: 1,
+  interestRate: 0,
   firstDueDate: null,
   observations: '',
   signatureUri: null,
+  signatureData: null,
 };
 
 interface SaleWizardContextType {
@@ -19,9 +21,9 @@ interface SaleWizardContextType {
   addItem: (item: CartItem) => void;
   updateItem: (productId: string, updates: Partial<CartItem>) => void;
   removeItem: (productId: string) => void;
-  setPayment: (method: string, count: number, firstDate: string | null) => void;
+  setPayment: (method: string, count: number, firstDate: string | null, interestRate?: number) => void;
   setObservations: (obs: string) => void;
-  setSignature: (uri: string | null) => void;
+  setSignature: (uri: string | null, data?: string | null) => void;
   getSubtotal: () => number;
   getTotalDiscount: () => number;
   getTotal: () => number;
@@ -68,12 +70,13 @@ export function SaleWizardProvider({ children }: { children: React.ReactNode }) 
     }));
   }, []);
 
-  const setPayment = useCallback((method: string, count: number, firstDate: string | null) => {
+  const setPayment = useCallback((method: string, count: number, firstDate: string | null, interestRate?: number) => {
     setState((s) => ({
       ...s,
       paymentMethod: method,
       installmentCount: count,
       firstDueDate: firstDate,
+      interestRate: interestRate ?? 0,
     }));
   }, []);
 
@@ -81,8 +84,8 @@ export function SaleWizardProvider({ children }: { children: React.ReactNode }) 
     setState((s) => ({ ...s, observations: obs }));
   }, []);
 
-  const setSignature = useCallback((uri: string | null) => {
-    setState((s) => ({ ...s, signatureUri: uri }));
+  const setSignature = useCallback((uri: string | null, data?: string | null) => {
+    setState((s) => ({ ...s, signatureUri: uri, signatureData: data ?? null }));
   }, []);
 
   const getSubtotal = useCallback(() => {

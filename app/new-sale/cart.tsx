@@ -59,7 +59,7 @@ export default function CartStep() {
       </View>
 
       {/* Summary + Next */}
-      <View style={[styles.bottomBar, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
+      <View style={[styles.bottomBar, { backgroundColor: colors.surface, borderTopColor: colors.border, paddingBottom: Math.max(insets.bottom, 16) }]}>
         <View>
           <View style={styles.summaryRow}>
             <Text style={{ color: colors.textSecondary }}>Subtotal:</Text>

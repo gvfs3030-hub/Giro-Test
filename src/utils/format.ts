@@ -88,3 +88,45 @@ export function addDays(dateStr: string, days: number): string {
   d.setDate(d.getDate() + days);
   return d.toISOString().split('T')[0] ?? dateStr;
 }
+
+export function paymentMethodLabel(method: string): string {
+  const map: Record<string, string> = { dinheiro: 'Dinheiro', cartao: 'Cartão', boleto: 'Boleto', pix: 'PIX', prazo: 'A Prazo' };
+  return map[method] ?? method;
+}
+
+// [LOCAL] Linha completa de pagamento pra exibir na tela e no PDF, já incluindo
+// parcelas (cartão ou a prazo) e juros, quando houver.
+export function paymentDetailLine(method: string, installmentCount: number, interestRate?: number | null): string {
+  let line = paymentMethodLabel(method);
+  const hasInstallments = (method === 'cartao' || method === 'prazo') && installmentCount > 1;
+  if (hasInstallments) line += ` em ${installmentCount}x`;
+  if ((method === 'cartao' || method === 'prazo') && (interestRate ?? 0) > 0) {
+    line += ` (com juros de ${interestRate}%)`;
+  } else if (hasInstallments) {
+    line += ' sem juros';
+  }
+  return line;
+}
+
+// [LOCAL] Rótulo amigável pra uma data (YYYY-MM-DD) usada no diário de visitas:
+// "Hoje", "Amanhã", ou "dd/mm — segunda-feira". Parseamos os componentes na mão pra
+// não cair na pegadinha de fuso horário do `new Date("YYYY-MM-DD")` (que interpreta
+// como UTC e pode voltar um dia dependendo do fuso do aparelho).
+const WEEKDAYS = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
+
+export function friendlyDateLabel(dateStr: string): string {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const target = new Date(y, (m ?? 1) - 1, d ?? 1);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  target.setHours(0, 0, 0, 0);
+  const diffDays = Math.round((target.getTime() - today.getTime()) / 86400000);
+  const dd = String(d).padStart(2, '0');
+  const mm = String(m).padStart(2, '0');
+  if (diffDays === 0) return `Hoje — ${dd}/${mm}`;
+  if (diffDays === 1) return `Amanhã — ${dd}/${mm}`;
+  if (diffDays === -1) return `Ontem — ${dd}/${mm}`;
+  const weekday = WEEKDAYS[target.getDay()];
+  const prefix = diffDays < 0 ? 'Atrasado' : weekday.charAt(0).toUpperCase() + weekday.slice(1);
+  return `${prefix} — ${dd}/${mm}`;
+}

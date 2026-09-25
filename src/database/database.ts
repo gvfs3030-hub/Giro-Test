@@ -127,6 +127,16 @@ export async function initDatabase(): Promise<void> {
       createdAt TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS visit_plans (
+      id TEXT PRIMARY KEY,
+      clientId TEXT NOT NULL,
+      plannedDate TEXT NOT NULL,
+      notes TEXT,
+      status TEXT NOT NULL DEFAULT 'pendente',
+      visitId TEXT,
+      createdAt TEXT NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS expenses (
       id TEXT PRIMARY KEY,
       description TEXT NOT NULL,
@@ -148,6 +158,20 @@ export async function initDatabase(): Promise<void> {
     );
   `);
 
+  // [LOCAL] Migração leve: adiciona colunas novas em bancos já existentes (quem já tinha
+  // o app instalado) sem apagar nada. ALTER TABLE falha se a coluna já existe — isso é
+  // esperado e ignorado, então é seguro rodar isso toda vez que o app abre.
+  const addColumnIfMissing = async (table: string, column: string, def: string) => {
+    try {
+      await database.execAsync(`ALTER TABLE ${table} ADD COLUMN ${column} ${def};`);
+    } catch (e) {
+      // coluna já existe — ok
+    }
+  };
+  await addColumnIfMissing('sales', 'interestRate', 'REAL DEFAULT 0');
+  await addColumnIfMissing('sales', 'cardInstallments', 'INTEGER DEFAULT 1');
+  await addColumnIfMissing('sales', 'signatureData', 'TEXT');
+
   // Create indexes
   await database.execAsync(`
     CREATE INDEX IF NOT EXISTS idx_clients_nomeFantasia ON clients(nomeFantasia);
@@ -167,6 +191,8 @@ export async function initDatabase(): Promise<void> {
     CREATE INDEX IF NOT EXISTS idx_installments_status ON installments(status);
     CREATE INDEX IF NOT EXISTS idx_visits_clientId ON visits(clientId);
     CREATE INDEX IF NOT EXISTS idx_visits_checkInAt ON visits(checkInAt);
+    CREATE INDEX IF NOT EXISTS idx_visit_plans_date ON visit_plans(plannedDate);
+    CREATE INDEX IF NOT EXISTS idx_visit_plans_clientId ON visit_plans(clientId);
     CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(date);
     CREATE INDEX IF NOT EXISTS idx_expenses_category ON expenses(category);
     CREATE INDEX IF NOT EXISTS idx_goals_yearMonth ON goals(yearMonth);

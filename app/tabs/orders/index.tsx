@@ -102,7 +102,7 @@ export default function OrdersListScreen() {
           <EmptyState
             icon="receipt-outline"
             title="Nenhum pedido realizado"
-            message="Fa\u00e7a sua primeira venda!"
+            message="Faça sua primeira venda!"
             actionLabel="Nova Venda"
             onAction={() => router.push('/new-sale')}
           />

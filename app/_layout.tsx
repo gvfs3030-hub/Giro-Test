@@ -4,6 +4,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ThemeProvider, useTheme } from '../src/contexts/ThemeContext';
 import { AppStateProvider } from '../src/contexts/AppStateContext';
+import { FocusPreviewProvider } from '../src/components/FocusPreview';
 import { initDatabase } from '../src/database/database';
 import Toast from 'react-native-toast-message';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -32,7 +33,7 @@ function AppContent() {
   }
 
   return (
-    <>
+    <FocusPreviewProvider>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
         <Stack.Screen name="index" />
@@ -53,12 +54,14 @@ function AppContent() {
         <Stack.Screen name="financial" />
         <Stack.Screen name="expenses" />
         <Stack.Screen name="routes" />
+        <Stack.Screen name="visit-plan" />
+        <Stack.Screen name="import-backup" />
         <Stack.Screen name="reports" />
         <Stack.Screen name="assistant" />
         <Stack.Screen name="settings" />
       </Stack>
       <Toast />
-    </>
+    </FocusPreviewProvider>
   );
 }
 

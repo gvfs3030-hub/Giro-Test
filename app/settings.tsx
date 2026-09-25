@@ -163,6 +163,10 @@ export default function SettingsScreen() {
           <Ionicons name="download-outline" size={20} color={colors.primary} />
           <Text style={{ color: colors.primary, fontWeight: '600' }}>Exportar Backup (JSON)</Text>
         </Pressable>
+        <Pressable style={[styles.dataBtn, { borderColor: colors.primary, marginTop: 8 }]} onPress={() => router.push('/import-backup')}>
+          <Ionicons name="cloud-upload-outline" size={20} color={colors.primary} />
+          <Text style={{ color: colors.primary, fontWeight: '600' }}>Importar Clientes e Produtos (JSON)</Text>
+        </Pressable>
         <Pressable style={[styles.dataBtn, { borderColor: colors.danger, marginTop: 8 }]} onPress={clearData}>
           <Ionicons name="trash-outline" size={20} color={colors.danger} />
           <Text style={{ color: colors.danger, fontWeight: '600' }}>Limpar Todos os Dados</Text>
@@ -171,7 +175,7 @@ export default function SettingsScreen() {
         {/* About */}
         <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 24 }]}>Sobre</Text>
         <Card>
-          <Text style={{ color: colors.text, fontWeight: '700', fontSize: 16 }}>Giro App</Text>
+          <Text style={{ color: colors.text, fontWeight: '700', fontSize: 16 }}>Giro Vendas</Text>
           <Text style={{ color: colors.textSecondary, marginTop: 4 }}>Versão 1.0.0</Text>
           <Text style={{ color: colors.textCaption, marginTop: 4 }}>App de vendas offline para distribuidores</Text>
         </Card>

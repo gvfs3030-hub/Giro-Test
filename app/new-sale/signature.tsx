@@ -14,6 +14,9 @@ export default function SignatureStep() {
   const wizard = useSaleWizard();
   const [paths, setPaths] = useState<string[]>([]);
   const [currentPath, setCurrentPath] = useState('');
+  const [canvasSize, setCanvasSize] = useState({ width: 300, height: 300 });
+
+  const currentPathRef = useRef('');
 
   const panResponder = useRef(
     PanResponder.create({
@@ -21,14 +24,24 @@ export default function SignatureStep() {
       onMoveShouldSetPanResponder: () => true,
       onPanResponderGrant: (evt) => {
         const { locationX, locationY } = evt.nativeEvent;
-        setCurrentPath(`M${locationX},${locationY}`);
+        const d = `M${locationX},${locationY}`;
+        currentPathRef.current = d;
+        setCurrentPath(d);
       },
       onPanResponderMove: (evt) => {
         const { locationX, locationY } = evt.nativeEvent;
-        setCurrentPath((prev) => `${prev} L${locationX},${locationY}`);
+        currentPathRef.current = `${currentPathRef.current} L${locationX},${locationY}`;
+        setCurrentPath(currentPathRef.current);
       },
       onPanResponderRelease: () => {
-        setPaths((prev) => [...prev, currentPath]);
+        // [LOCAL] Usamos a ref (valor sempre atualizado) em vez do state currentPath
+        // aqui dentro, porque esse callback foi criado uma única vez (useRef) e um
+        // closure sobre o state ficaria "travado" no valor inicial vazio — era por
+        // isso que o traço sumia assim que soltava o dedo.
+        if (currentPathRef.current) {
+          setPaths((prev) => [...prev, currentPathRef.current]);
+        }
+        currentPathRef.current = '';
         setCurrentPath('');
       },
     })
@@ -40,13 +53,17 @@ export default function SignatureStep() {
   };
 
   const handleConfirm = () => {
-    // In real app, would capture the SVG as image. For now, store paths as data.
-    wizard.setSignature(paths.length > 0 ? 'signed' : null);
+    if (paths.length > 0) {
+      const data = JSON.stringify({ paths, width: canvasSize.width, height: canvasSize.height });
+      wizard.setSignature('signed', data);
+    } else {
+      wizard.setSignature(null, null);
+    }
     router.push('/new-sale/confirmation');
   };
 
   const handleSkip = () => {
-    wizard.setSignature(null);
+    wizard.setSignature(null, null);
     router.push('/new-sale/confirmation');
   };
 
@@ -61,7 +78,11 @@ export default function SignatureStep() {
       <View style={styles.content}>
         <Text style={[styles.instruction, { color: colors.textSecondary }]}>Assine no espaço abaixo (opcional)</Text>
 
-        <View style={[styles.canvasContainer, { backgroundColor: '#fff', borderColor: colors.border }]} {...panResponder.panHandlers}>
+        <View
+          style={[styles.canvasContainer, { backgroundColor: '#fff', borderColor: colors.border }]}
+          onLayout={(e) => setCanvasSize({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height })}
+          {...panResponder.panHandlers}
+        >
           <Svg style={StyleSheet.absoluteFill}>
             {paths.map((p, i) => (
               <Path key={i} d={p} stroke="#1A1A1A" strokeWidth={2.5} fill="none" strokeLinecap="round" strokeLinejoin="round" />
@@ -81,7 +102,7 @@ export default function SignatureStep() {
         </View>
       </View>
 
-      <View style={[styles.bottomBar, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
+      <View style={[styles.bottomBar, { backgroundColor: colors.surface, borderTopColor: colors.border, paddingBottom: Math.max(insets.bottom, 16) }]}>
         <Pressable style={[styles.confirmBtn, { backgroundColor: colors.primary }]} onPress={handleConfirm}>
           <Ionicons name="checkmark" size={20} color="#fff" />
           <Text style={styles.confirmBtnText}>Confirmar Pedido</Text>

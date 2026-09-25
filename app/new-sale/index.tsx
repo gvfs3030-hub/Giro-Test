@@ -98,7 +98,7 @@ export default function SelectClientStep() {
 
       {/* Next button */}
       {wizard.state.clientId && (
-        <View style={[styles.bottomBar, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
+        <View style={[styles.bottomBar, { backgroundColor: colors.surface, borderTopColor: colors.border, paddingBottom: Math.max(insets.bottom, 16) }]}>
           <Text style={[styles.selectedText, { color: colors.textSecondary }]}>{wizard.state.clientName}</Text>
           <Pressable style={[styles.nextBtn, { backgroundColor: colors.primary }]} onPress={() => router.push('/new-sale/products')}>
             <Text style={styles.nextBtnText}>Próximo</Text>

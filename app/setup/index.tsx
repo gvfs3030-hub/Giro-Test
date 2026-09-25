@@ -35,7 +35,7 @@ export default function SetupScreen() {
         [sellerName.trim(), companyName.trim(), category, phone.trim() || null, now, now]
       );
       await setSetupComplete();
-      Toast.show({ type: 'success', text1: 'Bem-vindo ao Giro!', position: 'bottom' });
+      Toast.show({ type: 'success', text1: 'Bem-vindo ao Giro Vendas!', position: 'bottom' });
       router.replace('/tabs/home');
     } catch (e) {
       console.error(e);
@@ -52,7 +52,7 @@ export default function SetupScreen() {
     >
       <View style={[styles.header, { backgroundColor: colors.primary }]}>
         <Ionicons name="storefront" size={48} color="#fff" />
-        <Text style={styles.headerTitle}>Giro</Text>
+        <Text style={styles.headerTitle}>Giro Vendas</Text>
         <Text style={styles.headerSub}>Configure seu perfil para começar</Text>
       </View>
 

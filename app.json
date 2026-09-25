@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Giro",
+    "name": "Giro Vendas",
     "slug": "giro-vendas",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -44,7 +44,16 @@
     },
     "plugins": [
       "expo-router",
-      "expo-sqlite"
+      "expo-sqlite",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 220,
+          "resizeMode": "contain",
+          "backgroundColor": "#00C853"
+        }
+      ]
     ],
     "scheme": "giro"
   }

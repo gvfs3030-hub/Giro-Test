@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../src/contexts/ThemeContext';
 import { useSaleWizard } from '../../src/contexts/SaleWizardContext';
 import { getDatabase } from '../../src/database/database';
-import { generateUUID, todayISO, formatCurrency, formatDateTime, addDays, todayDateISO } from '../../src/utils/format';
+import { generateUUID, todayISO, formatCurrency, formatDateTime, addDays, todayDateISO, paymentDetailLine } from '../../src/utils/format';
 import Toast from 'react-native-toast-message';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
@@ -42,11 +42,13 @@ export default function ConfirmationStep() {
       const total = wizard.getTotal();
 
       await db.runAsync(
-        `INSERT INTO sales (id, orderNumber, clientId, subtotal, totalDiscount, total, paymentMethod, installmentCount, observations, signatureUri, status, createdAt, updatedAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendente', ?, ?)`,
+        `INSERT INTO sales (id, orderNumber, clientId, subtotal, totalDiscount, total, paymentMethod, installmentCount, interestRate, cardInstallments, observations, signatureUri, signatureData, status, createdAt, updatedAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendente', ?, ?)`,
         [id, newOrderNum, wizard.state.clientId ?? 'avulso', subtotal, totalDiscount, total,
-         wizard.state.paymentMethod, wizard.state.installmentCount, wizard.state.observations || null,
-         wizard.state.signatureUri, now, now]
+         wizard.state.paymentMethod, wizard.state.installmentCount, wizard.state.interestRate || 0,
+         wizard.state.paymentMethod === 'cartao' ? wizard.state.installmentCount : 1,
+         wizard.state.observations || null,
+         wizard.state.signatureUri, wizard.state.signatureData, now, now]
       );
 
       // Insert items + decrement stock
@@ -66,7 +68,8 @@ export default function ConfirmationStep() {
 
       // Create installments if payment is 'prazo'
       if (wizard.state.paymentMethod === 'prazo' && wizard.state.installmentCount > 1) {
-        const installmentValue = total / wizard.state.installmentCount;
+        const totalComJuros = total * (1 + (wizard.state.interestRate || 0) / 100);
+        const installmentValue = totalComJuros / wizard.state.installmentCount;
         const today = todayDateISO();
         for (let i = 0; i < wizard.state.installmentCount; i++) {
           const instId = generateUUID();
@@ -88,6 +91,20 @@ export default function ConfirmationStep() {
       Toast.show({ type: 'error', text1: 'Erro ao salvar pedido', position: 'bottom' });
     }
     setSaving(false);
+  };
+
+  const signatureHtml = () => {
+    if (!wizard.state.signatureData) return '';
+    try {
+      const sig = JSON.parse(wizard.state.signatureData) as { paths: string[]; width: number; height: number };
+      const pathsSvg = (sig.paths ?? []).map((d) => `<path d="${d}" stroke="#1A1A1A" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`).join('');
+      return `<div class="sig-box">
+        <label>Assinatura do cliente</label>
+        <svg viewBox="0 0 ${sig.width} ${sig.height}" style="width:220px;height:110px;border:1px solid #eee;border-radius:8px;background:#fff">${pathsSvg}</svg>
+      </div>`;
+    } catch {
+      return '';
+    }
   };
 
   const generatePDF = async () => {
@@ -112,10 +129,13 @@ export default function ConfirmationStep() {
         td { padding: 10px 8px; border-bottom: 1px solid #eee; font-size: 14px; }
         .totals { text-align: right; margin-top: 16px; }
         .totals .total { font-size: 20px; color: #00C853; font-weight: bold; }
+        .sig-box { margin-top: 24px; }
+        .sig-box label { font-size: 12px; color: #666; display: block; margin-bottom: 6px; }
         .footer { margin-top: 32px; text-align: center; color: #999; font-size: 12px; }
+        .footer .thanks { color: #00C853; font-weight: bold; font-size: 15px; margin-bottom: 4px; }
       </style></head><body>
         <div class="header">
-          <h1>${config?.companyName ?? 'Giro'}</h1>
+          <h1>${config?.companyName ?? 'Giro Vendas'}</h1>
           <p>Vendedor: ${config?.sellerName ?? ''}</p>
         </div>
         <div class="info">
@@ -123,14 +143,18 @@ export default function ConfirmationStep() {
           <div class="info-box"><label>Cliente</label><p>${wizard.state.clientName ?? 'Consumidor Avulso'}</p></div>
           <div class="info-box"><label>Data</label><p>${formatDateTime(todayISO())}</p></div>
         </div>
-        <table><thead><tr><th>Produto</th><th>Qtd</th><th>Pre\u00e7o Unit.</th><th>Desc.</th><th>Subtotal</th></tr></thead><tbody>${itemsHtml}</tbody></table>
+        <table><thead><tr><th>Produto</th><th>Qtd</th><th>Preço Unit.</th><th>Desc.</th><th>Subtotal</th></tr></thead><tbody>${itemsHtml}</tbody></table>
         <div class="totals">
           <p>Subtotal: ${formatCurrency(wizard.getSubtotal())}</p>
           <p>Desconto: -${formatCurrency(wizard.getTotalDiscount())}</p>
           <p class="total">Total: ${formatCurrency(wizard.getTotal())}</p>
-          <p>Pagamento: ${wizard.state.paymentMethod}</p>
+          <p>Pagamento: ${paymentDetailLine(wizard.state.paymentMethod, wizard.state.installmentCount, wizard.state.interestRate)}</p>
         </div>
-        <div class="footer"><p>Documento gerado pelo Giro App</p></div>
+        ${signatureHtml()}
+        <div class="footer">
+          <p class="thanks">Agradecemos a Preferência!</p>
+          <p>Documento gerado pelo Giro Vendas</p>
+        </div>
       </body></html>`;
 
       const { uri } = await Print.printToFileAsync({ html });

@@ -1,6 +1,6 @@
 // [LOCAL] — layout de tabs inferior
 import React from 'react';
-import { Tabs } from 'expo-router';
+import { Tabs, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { View, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -48,6 +48,15 @@ export default function TabsLayout() {
               <Ionicons name="add" size={32} color="#fff" />
             </View>
           ),
+        }}
+        listeners={{
+          // [LOCAL] Esse "tab" nunca deve realmente abrir/renderizar tela própria (por isso
+          // ficava branco por um instante). Interceptamos o toque e vamos direto pro fluxo
+          // de nova venda, funcionando como um botão de atalho, não como uma aba de verdade.
+          tabPress: (e) => {
+            e.preventDefault();
+            router.push('/new-sale');
+          },
         }}
       />
       <Tabs.Screen

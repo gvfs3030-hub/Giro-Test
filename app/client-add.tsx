@@ -8,6 +8,7 @@ import { useTheme } from '../src/contexts/ThemeContext';
 import { getDatabase } from '../src/database/database';
 import { generateUUID, todayISO } from '../src/utils/format';
 import { FontSize, Spacing, BorderRadius } from '../src/constants/theme';
+import { useFocusPreview } from '../src/components/FocusPreview';
 import Toast from 'react-native-toast-message';
 
 // [LOCAL] Componente definido FORA da tela: se ficasse dentro de ClientAddScreen,
@@ -16,13 +17,16 @@ import Toast from 'react-native-toast-message';
 // e o teclado depois de cada caractere. Definido aqui fora, a mesma instância é
 // reaproveitada entre renders e a digitação funciona normalmente.
 function InputField({ label, field, required, form, onUpdate, colors, ...props }: any) {
+  const { report, clear } = useFocusPreview();
   return (
     <View style={styles.field}>
       <Text style={[styles.label, { color: colors.text }]}>{label}{required ? ' *' : ''}</Text>
       <TextInput
         style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
         value={form[field] ?? ''}
-        onChangeText={(v: string) => onUpdate(field, v)}
+        onChangeText={(v: string) => { onUpdate(field, v); report(label, v); }}
+        onFocus={() => report(label, form[field] ?? '')}
+        onBlur={clear}
         placeholderTextColor={colors.textCaption}
         {...props}
       />

@@ -61,8 +61,11 @@ export interface Sale {
   total: number;
   paymentMethod: string;
   installmentCount: number;
+  interestRate?: number;
+  cardInstallments?: number;
   observations: string | null;
   signatureUri: string | null;
+  signatureData?: string | null;
   status: string;
   createdAt: string;
   updatedAt: string;
@@ -114,6 +117,17 @@ export interface Visit {
   clientName?: string;
 }
 
+export interface VisitPlan {
+  id: string;
+  clientId: string;
+  plannedDate: string;
+  notes: string | null;
+  status: 'pendente' | 'concluida' | 'cancelada';
+  visitId: string | null;
+  createdAt: string;
+  clientName?: string;
+}
+
 export interface Expense {
   id: string;
   description: string;
@@ -153,9 +167,11 @@ export interface SaleWizardState {
   items: CartItem[];
   paymentMethod: string;
   installmentCount: number;
+  interestRate: number;
   firstDueDate: string | null;
   observations: string;
   signatureUri: string | null;
+  signatureData: string | null;
 }
 
 export type ThemeMode = 'light' | 'dark' | 'system';

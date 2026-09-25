@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../../src/contexts/ThemeContext';
 import { getDatabase } from '../../../src/database/database';
 import type { Sale, SaleItem } from '../../../src/types';
-import { formatCurrency, formatDateTime, todayISO } from '../../../src/utils/format';
+import { formatCurrency, formatDateTime, todayISO, paymentDetailLine } from '../../../src/utils/format';
 import StatusBadge from '../../../src/components/StatusBadge';
 import Card from '../../../src/components/Card';
 import { ORDER_STATUS } from '../../../src/constants/theme';
@@ -64,7 +64,16 @@ export default function OrderDetailScreen() {
       const itemsHtml = items.map((item) =>
         `<tr><td>${item?.productName ?? ''}</td><td style="text-align:center">${item?.quantity ?? 0} ${item?.unit ?? ''}</td><td style="text-align:right">${formatCurrency(item?.unitPrice)}</td><td style="text-align:center">${item?.discount ?? 0}%</td><td style="text-align:right">${formatCurrency(item?.subtotal)}</td></tr>`
       ).join('');
-      const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:Arial;margin:0;padding:20px;color:#1A1A1A}.header{background:#00C853;color:#fff;padding:20px;border-radius:8px;margin-bottom:20px}.header h1{margin:0}table{width:100%;border-collapse:collapse;margin:16px 0}th{background:#00C853;color:#fff;padding:10px 8px;text-align:left}td{padding:10px 8px;border-bottom:1px solid #eee}.totals{text-align:right;margin-top:16px}.total{font-size:20px;color:#00C853;font-weight:bold}</style></head><body><div class="header"><h1>${config?.companyName ?? 'Giro'}</h1><p>Vendedor: ${config?.sellerName ?? ''}</p></div><p><strong>Pedido:</strong> #${String(sale.orderNumber ?? 0).padStart(3, '0')} | <strong>Cliente:</strong> ${sale.clientName ?? 'Avulso'} | <strong>Data:</strong> ${formatDateTime(sale.createdAt)}</p><table><thead><tr><th>Produto</th><th>Qtd</th><th>Preço</th><th>Desc.</th><th>Subtotal</th></tr></thead><tbody>${itemsHtml}</tbody></table><div class="totals"><p>Subtotal: ${formatCurrency(sale.subtotal)}</p><p>Desconto: -${formatCurrency(sale.totalDiscount)}</p><p class="total">Total: ${formatCurrency(sale.total)}</p></div></body></html>`;
+      const sigData = sale.signatureData ? (() => {
+        try {
+          const sig = JSON.parse(sale.signatureData as string) as { paths: string[]; width: number; height: number };
+          const pathsSvg = (sig.paths ?? []).map((d) => `<path d="${d}" stroke="#1A1A1A" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`).join('');
+          return `<div style="margin-top:24px"><label style="font-size:12px;color:#666;display:block;margin-bottom:6px">Assinatura do cliente</label><svg viewBox="0 0 ${sig.width} ${sig.height}" style="width:220px;height:110px;border:1px solid #eee;border-radius:8px;background:#fff">${pathsSvg}</svg></div>`;
+        } catch {
+          return '';
+        }
+      })() : '';
+      const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:Arial;margin:0;padding:20px;color:#1A1A1A}.header{background:#00C853;color:#fff;padding:20px;border-radius:8px;margin-bottom:20px}.header h1{margin:0}table{width:100%;border-collapse:collapse;margin:16px 0}th{background:#00C853;color:#fff;padding:10px 8px;text-align:left}td{padding:10px 8px;border-bottom:1px solid #eee}.totals{text-align:right;margin-top:16px}.total{font-size:20px;color:#00C853;font-weight:bold}.footer{margin-top:32px;text-align:center;color:#999;font-size:12px}.footer .thanks{color:#00C853;font-weight:bold;font-size:15px;margin-bottom:4px}</style></head><body><div class="header"><h1>${config?.companyName ?? 'Giro Vendas'}</h1><p>Vendedor: ${config?.sellerName ?? ''}</p></div><p><strong>Pedido:</strong> #${String(sale.orderNumber ?? 0).padStart(3, '0')} | <strong>Cliente:</strong> ${sale.clientName ?? 'Avulso'} | <strong>Data:</strong> ${formatDateTime(sale.createdAt)}</p><table><thead><tr><th>Produto</th><th>Qtd</th><th>Preço</th><th>Desc.</th><th>Subtotal</th></tr></thead><tbody>${itemsHtml}</tbody></table><div class="totals"><p>Subtotal: ${formatCurrency(sale.subtotal)}</p><p>Desconto: -${formatCurrency(sale.totalDiscount)}</p><p class="total">Total: ${formatCurrency(sale.total)}</p><p>Pagamento: ${paymentDetailLine(sale.paymentMethod, sale.installmentCount, sale.interestRate)}</p></div>${sigData}<div class="footer"><p class="thanks">Agradecemos a Preferência!</p><p>Documento gerado pelo Giro Vendas</p></div></body></html>`;
       const { uri } = await Print.printToFileAsync({ html });
       if (Platform.OS !== 'web') {
         await Sharing.shareAsync(uri);
@@ -94,7 +103,7 @@ export default function OrderDetailScreen() {
           <Text style={[styles.infoLabel, { color: colors.textCaption }]}>Cliente</Text>
           <Text style={[styles.infoValue, { color: colors.text }]}>{sale.clientName ?? 'Consumidor Avulso'}</Text>
           <Text style={[styles.infoLabel, { color: colors.textCaption, marginTop: 8 }]}>Pagamento</Text>
-          <Text style={[styles.infoValue, { color: colors.text }]}>{sale.paymentMethod}{sale.installmentCount > 1 ? ` (${sale.installmentCount}x)` : ''}</Text>
+          <Text style={[styles.infoValue, { color: colors.text }]}>{paymentDetailLine(sale.paymentMethod, sale.installmentCount, sale.interestRate)}</Text>
         </Card>
 
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Itens</Text>

@@ -6,22 +6,23 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../src/contexts/ThemeContext';
 import { getDatabase } from '../src/database/database';
-import { generateUUID, todayISO, parseCurrencyInput } from '../src/utils/format';
+import { generateUUID, todayISO, parseCurrencyInput, formatCurrency } from '../src/utils/format';
 import { UNITS, CATEGORIES, FontSize, Spacing, BorderRadius } from '../src/constants/theme';
+import { useFocusPreview } from '../src/components/FocusPreview';
 import Toast from 'react-native-toast-message';
 
 export default function ProductAddScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const { report, clear } = useFocusPreview();
   const [name, setName] = useState('');
   const [barcode, setBarcode] = useState('');
   const [category, setCategory] = useState('Alimentos');
   const [unit, setUnit] = useState('UN');
   const [price1, setPrice1] = useState('');
   const [price2, setPrice2] = useState('');
-  const [price3, setPrice3] = useState('');
-  const [stockCurrent, setStockCurrent] = useState('0');
-  const [stockMinimum, setStockMinimum] = useState('0');
+  const [stockCurrent, setStockCurrent] = useState('');
+  const [stockMinimum, setStockMinimum] = useState('');
   const [description, setDescription] = useState('');
   const [saving, setSaving] = useState(false);
   const [showCat, setShowCat] = useState(false);
@@ -37,10 +38,10 @@ export default function ProductAddScreen() {
       const now = todayISO();
       const id = generateUUID();
       await db.runAsync(
-        `INSERT INTO products (id, name, barcode, category, unit, price1, price2, price3, stockCurrent, stockMinimum, description, isActive, createdAt, updatedAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)`,
+        `INSERT INTO products (id, name, barcode, category, unit, price1, price2, stockCurrent, stockMinimum, description, isActive, createdAt, updatedAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)`,
         [id, name.trim(), barcode || null, category, unit, parseCurrencyInput(price1),
-         price2 ? parseCurrencyInput(price2) : null, price3 ? parseCurrencyInput(price3) : null,
+         price2 ? parseCurrencyInput(price2) : null,
          parseInt(stockCurrent) || 0, parseInt(stockMinimum) || 0, description || null, now, now]
       );
       Toast.show({ type: 'success', text1: 'Produto cadastrado!', position: 'bottom' });
@@ -61,10 +62,10 @@ export default function ProductAddScreen() {
       </View>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <Text style={[styles.label, { color: colors.text }]}>Nome do Produto *</Text>
-        <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]} value={name} onChangeText={setName} placeholder="Nome do produto" placeholderTextColor={colors.textCaption} />
+        <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]} value={name} onChangeText={(v) => { setName(v); report('Nome do Produto', v); }} onFocus={() => report('Nome do Produto', name)} onBlur={clear} placeholder="Nome do produto" placeholderTextColor={colors.textCaption} />
 
         <Text style={[styles.label, { color: colors.text }]}>Código de Barras</Text>
-        <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]} value={barcode} onChangeText={setBarcode} placeholder="Código de barras" placeholderTextColor={colors.textCaption} />
+        <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]} value={barcode} onChangeText={(v) => { setBarcode(v); report('Código de Barras', v); }} onFocus={() => report('Código de Barras', barcode)} onBlur={clear} placeholder="Código de barras" placeholderTextColor={colors.textCaption} />
 
         <Text style={[styles.label, { color: colors.text }]}>Categoria</Text>
         <Pressable style={[styles.input, styles.picker, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => setShowCat(!showCat)}>
@@ -96,28 +97,36 @@ export default function ProductAddScreen() {
           </View>
         )}
 
-        <Text style={[styles.label, { color: colors.text }]}>Preço Tabela 1 *</Text>
-        <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]} value={price1} onChangeText={setPrice1} placeholder="0,00" placeholderTextColor={colors.textCaption} keyboardType="decimal-pad" />
+        <Text style={[styles.label, { color: colors.text }]}>Preço de Venda *</Text>
+        <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]} value={price1} onChangeText={(v) => { setPrice1(v); report('Preço de Venda', v); }} onFocus={() => report('Preço de Venda', price1)} onBlur={clear} placeholder="0,00" placeholderTextColor={colors.textCaption} keyboardType="decimal-pad" />
 
-        <Text style={[styles.label, { color: colors.text }]}>Preço Tabela 2</Text>
-        <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]} value={price2} onChangeText={setPrice2} placeholder="0,00" placeholderTextColor={colors.textCaption} keyboardType="decimal-pad" />
+        <Text style={[styles.label, { color: colors.text }]}>Preço de Custo</Text>
+        <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]} value={price2} onChangeText={(v) => { setPrice2(v); report('Preço de Custo', v); }} onFocus={() => report('Preço de Custo', price2)} onBlur={clear} placeholder="0,00" placeholderTextColor={colors.textCaption} keyboardType="decimal-pad" />
 
-        <Text style={[styles.label, { color: colors.text }]}>Preço Tabela 3</Text>
-        <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]} value={price3} onChangeText={setPrice3} placeholder="0,00" placeholderTextColor={colors.textCaption} keyboardType="decimal-pad" />
+        {parseCurrencyInput(price1) > 0 && parseCurrencyInput(price2) > 0 && (
+          <View style={[styles.marginBox, { backgroundColor: colors.primaryLight }]}>
+            <Text style={{ color: colors.primary, fontWeight: '600', fontSize: 13 }}>Lucro estimado por unidade</Text>
+            <Text style={{ color: colors.primary, fontWeight: '700', fontSize: 20, marginTop: 2 }}>
+              {formatCurrency(parseCurrencyInput(price1) - parseCurrencyInput(price2))}
+              {'  '}
+              ({(((parseCurrencyInput(price1) - parseCurrencyInput(price2)) / parseCurrencyInput(price1)) * 100).toFixed(1)}%)
+            </Text>
+          </View>
+        )}
 
         <View style={styles.row}>
           <View style={{ flex: 1 }}>
             <Text style={[styles.label, { color: colors.text }]}>Estoque Atual</Text>
-            <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]} value={stockCurrent} onChangeText={setStockCurrent} keyboardType="numeric" />
+            <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]} value={stockCurrent} onChangeText={(v) => { setStockCurrent(v); report('Estoque Atual', v); }} onFocus={() => report('Estoque Atual', stockCurrent)} onBlur={clear} placeholder="0" placeholderTextColor={colors.textCaption} keyboardType="numeric" />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={[styles.label, { color: colors.text }]}>Estoque Mínimo</Text>
-            <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]} value={stockMinimum} onChangeText={setStockMinimum} keyboardType="numeric" />
+            <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]} value={stockMinimum} onChangeText={(v) => { setStockMinimum(v); report('Estoque Mínimo', v); }} onFocus={() => report('Estoque Mínimo', stockMinimum)} onBlur={clear} placeholder="0" placeholderTextColor={colors.textCaption} keyboardType="numeric" />
           </View>
         </View>
 
         <Text style={[styles.label, { color: colors.text }]}>Descrição</Text>
-        <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border, height: 80, textAlignVertical: 'top' }]} value={description} onChangeText={setDescription} placeholder="Descrição do produto" placeholderTextColor={colors.textCaption} multiline />
+        <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border, height: 80, textAlignVertical: 'top' }]} value={description} onChangeText={(v) => { setDescription(v); report('Descrição', v); }} onFocus={() => report('Descrição', description)} onBlur={clear} placeholder="Descrição do produto" placeholderTextColor={colors.textCaption} multiline />
 
         <Pressable style={[styles.saveBtn, { backgroundColor: canSave ? colors.primary : colors.border }]} onPress={handleSave} disabled={!canSave || saving}>
           <Text style={styles.saveBtnText}>{saving ? 'Salvando...' : 'Salvar Produto'}</Text>
@@ -138,6 +147,7 @@ const styles = StyleSheet.create({
   pickerList: { borderWidth: 1, borderRadius: 12, overflow: 'hidden', marginTop: 4 },
   pickerItem: { paddingVertical: 12, paddingHorizontal: 16 },
   row: { flexDirection: 'row', gap: 12 },
+  marginBox: { borderRadius: 12, padding: 12, marginTop: 12 },
   saveBtn: { height: 56, borderRadius: 24, alignItems: 'center', justifyContent: 'center', marginTop: 24 },
   saveBtnText: { color: '#fff', fontSize: 18, fontWeight: '700' },
 });

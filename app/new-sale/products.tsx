@@ -154,7 +154,7 @@ export default function SelectProductsStep() {
       </Modal>
 
       {/* Bottom bar */}
-      <View style={[styles.bottomBar, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
+      <View style={[styles.bottomBar, { backgroundColor: colors.surface, borderTopColor: colors.border, paddingBottom: Math.max(insets.bottom, 16) }]}>
         <View>
           <Text style={{ color: colors.textSecondary, fontSize: 14 }}>{totalItems} item(ns)</Text>
           <Text style={[styles.totalText, { color: colors.text }]}>{formatCurrency(totalValue)}</Text>

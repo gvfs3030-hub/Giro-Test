@@ -68,22 +68,26 @@ export default function ProductDetailScreen() {
         {product.category ? <Text style={[styles.cat, { color: colors.textSecondary }]}>{product.category}</Text> : null}
         <View style={styles.pricesRow}>
           <View style={styles.priceBox}>
-            <Text style={[styles.priceLabel, { color: colors.textCaption }]}>Tabela 1</Text>
+            <Text style={[styles.priceLabel, { color: colors.textCaption }]}>Preço de Venda</Text>
             <Text style={[styles.priceValue, { color: colors.text }]}>{formatCurrency(product.price1)}</Text>
           </View>
           {product.price2 != null && (
             <View style={styles.priceBox}>
-              <Text style={[styles.priceLabel, { color: colors.textCaption }]}>Tabela 2</Text>
+              <Text style={[styles.priceLabel, { color: colors.textCaption }]}>Preço de Custo</Text>
               <Text style={[styles.priceValue, { color: colors.text }]}>{formatCurrency(product.price2)}</Text>
             </View>
           )}
-          {product.price3 != null && (
-            <View style={styles.priceBox}>
-              <Text style={[styles.priceLabel, { color: colors.textCaption }]}>Tabela 3</Text>
-              <Text style={[styles.priceValue, { color: colors.text }]}>{formatCurrency(product.price3)}</Text>
-            </View>
-          )}
         </View>
+        {product.price1 > 0 && product.price2 != null && product.price2 > 0 && (
+          <View style={[styles.marginBox, { backgroundColor: colors.primaryLight }]}>
+            <Text style={{ color: colors.primary, fontWeight: '600', fontSize: 13 }}>Lucro estimado por unidade</Text>
+            <Text style={{ color: colors.primary, fontWeight: '700', fontSize: 20, marginTop: 2 }}>
+              {formatCurrency(product.price1 - product.price2)}
+              {'  '}
+              ({(((product.price1 - product.price2) / product.price1) * 100).toFixed(1)}%)
+            </Text>
+          </View>
+        )}
         <View style={styles.stockInfo}>
           <Text style={[styles.stockLabel, { color: colors.textSecondary }]}>Estoque: {product.stockCurrent} {product.unit}</Text>
           {lowStock && <StatusBadge label="Estoque Baixo" color="#EF4444" />}
@@ -108,6 +112,7 @@ const styles = StyleSheet.create({
   cat: { fontSize: 16, marginTop: 4 },
   pricesRow: { flexDirection: 'row', gap: 16, marginTop: 24 },
   priceBox: { alignItems: 'center' },
+  marginBox: { borderRadius: 12, padding: 12, marginTop: 16, alignItems: 'center' },
   priceLabel: { fontSize: 12 },
   priceValue: { fontSize: 20, fontWeight: '700' },
   stockInfo: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16 },
